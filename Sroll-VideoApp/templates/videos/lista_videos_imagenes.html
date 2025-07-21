@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Lista de Vídeos{% endblock %}
+
+{% block zona_fija %}
+<!-- Zona fija: navbar + cabecera -->
+        <nav class="navbar">
+            <a href="{% url 'ConsolaVideoApp:lista_videos_imagenes' %}">Inicio</a>
+            {% if request.user.is_authenticated %}
+                <a href="{% url 'Formulario_seleccion_de_carga:seleccionar_tipo_de_archivo' %}">Subir Video / Imagenes</a>
+                <div>
+                    {% if notificaciones_no_leidas is not None %}
+                        <a id="campanaNotificacion"
+                            data-url="{% url 'ConsolaNotificacionesApp:cantidad_notificaciones_no_leidas' %}"
+                            href="{% url 'ConsolaNotificacionesApp:lista_notificaciones' %}">
+                            <i class="fas fa-bell"></i>
+                            <span id="contadorNotificaciones">({{ notificaciones_no_leidas }})</span>
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="usuario-dropdown">
+                    <button type="button" class="usuario-toggle">
+                        {{ request.user.username }}
+                        {% if request.user.perfil.foto %}
+                            <img src="{{ request.user.perfil.foto.url }}" class="avatar-nav">
+                        {% else %}
+                            <img class="avatar-nav" src="{% static 'img/usuario.png' %}" alt="Foto por defecto">
+                        {% endif %}
+                        <i class="fas fa-caret-down"></i>
+                    </button>
+                    <div class="usuario-menu">
+                        <form method="POST" action="{% url 'ConsolaPerfiUsuarioApp:perfil_usuario' %}">
+                            {% csrf_token %}
+                            <button type="submit"> Ver Perfil</button>
+                        </form>
+                        <form method="POST" action="{% url 'ConsolaUsuarioApp:logout' %}">
+                            {% csrf_token %}
+                            <button type="submit">Cerrar sesión</button>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <a href="{% url 'ConsolaUsuarioApp:login' %}">Iniciar sesión</a>
+            {% endif %}
+        </nav>
+
+        <div class="zona-fija">
+            <h1><strong>Comparte tu Foto o Video</strong></h1>
+            <div class="search-container">
+                <!-- Formulario de búsqueda -->
+                <form method="GET" action="{% url 'ConsolaVideoApp:lista_videos_imagenes' %}">
+                    <input type="text" name="q" placeholder="Buscar por Nombre..." value="{{ request.GET.q }}">
+                    <!-- Filtro por categoría -->
+                    <select name="categoria">
+                        <option value="">Todas las categorías</option>
+                        {% for categoria in categorias %}
+                            <option value="{{ categoria.id }}" {% if request.GET.categoria == categoria.id|stringformat:"s" %}selected{% endif %}>
+                                {{ categoria.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit">Filtrar</button>
+                </form>
+            </div>
+        </div>
+{% endblock %}
+
+{% block content %}
+<div class="zona-scrollable" id="zona-scroll">
+    <div id="contenedor-videos-imagenes" 
+        data-url-scroll="{% url 'ConsolaVideoApp:cargar_elementos_scroll' %}" 
+        class="video-grid">
+        <!--{% include 'videos/componentes/contenido_grid.html' %}-->
+    </div>
+    <div id="loader" style="text-align:center; display:none;">Cargando más contenido...</div>
+</div>
+
+{% endblock %}
+
+<script>
+    let page = {{ page_obj.next_page_number|default:2 }};
+</script>
+
+
+
+
+
+
+
+
+{% comment %} <!-- Paginación -->
+<div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; Primera</a>
+            <a href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+        {% endif %}
+
+        <span class="current">
+            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+        {% endif %}
+    </span>
+</div> {% endcomment %}
+
+
+
